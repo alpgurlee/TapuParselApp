@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 // Routes will be imported here
 import authRoutes from './routes/auth';
 import parcelRoutes from './routes/parcelRoutes';
+import locationRoutes from './routes/locationRoutes';
+import noteRoutes from './routes/noteRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +32,8 @@ mongoose.connect(MONGODB_URI)
 // Routes will be registered here
 app.use('/api/auth', authRoutes);  // Tüm auth route'ları /api/auth altında olacak
 app.use('/api/parcels', parcelRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/notes', noteRoutes);
 
 // Base route
 app.get('/', (_req: Request, res: Response) => {

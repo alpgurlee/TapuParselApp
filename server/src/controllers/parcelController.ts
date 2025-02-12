@@ -12,6 +12,8 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import Parcel from '../models/Parcel';
+import { AuthRequest } from '../middleware/authMiddleware';
+import mongoose from 'mongoose';
 
 /**
  * Verilen adres için Google Maps Geocoding API'sini kullanarak koordinatları alır
@@ -49,68 +51,60 @@ const getCoordinates = async (address: string): Promise<[number, number] | null>
  * 3. Örnek parsel sınırları oluşturur (gerçek API entegrasyonu yapılana kadar)
  * 4. Parseli veritabanına kaydeder
  * 
- * @param req - Express Request nesnesi (body'de il, ilce, mahalle, ada, parsel bilgileri olmalı)
+ * @param req - Express Request nesnesi
  * @param res - Express Response nesnesi
  */
-export const searchParcel = async (req: Request, res: Response): Promise<void> => {
+export const searchParcel = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { il, ilce, mahalle, ada, parsel } = req.body;
+    const { il, ilce, mahalle, ada } = req.body;
 
-    // Tam adresi oluştur
-    const address = `${mahalle} Mahallesi, ${ilce}, ${il}, Türkiye`;
-    
+    // Adres oluştur
+    const address = `${mahalle}, ${ilce}, ${il}`;
+
     // Koordinatları al
     const coordinates = await getCoordinates(address);
-    
+
     if (!coordinates) {
-      res.status(404).json({
-        success: false,
-        message: 'Konum bulunamadı',
-      });
+      res.status(400).json({ message: 'Koordinatlar bulunamadı' });
       return;
     }
 
-    // Örnek parsel sınırları oluştur (0.001 derece yaklaşık 111 metre)
-    const parcelBoundaries = [
-      [
-        [coordinates[0] - 0.001, coordinates[1] - 0.001],
-        [coordinates[0] + 0.001, coordinates[1] - 0.001],
-        [coordinates[0] + 0.001, coordinates[1] + 0.001],
-        [coordinates[0] - 0.001, coordinates[1] + 0.001],
-        [coordinates[0] - 0.001, coordinates[1] - 0.001],
-      ],
+    // Örnek parsel sınırları oluştur (gerçek API entegrasyonu yapılana kadar)
+    const [longitude, latitude] = coordinates;
+    const boundaries = [
+      [longitude - 0.001, latitude - 0.001],
+      [longitude + 0.001, latitude - 0.001],
+      [longitude + 0.001, latitude + 0.001],
+      [longitude - 0.001, latitude + 0.001],
+      [longitude - 0.001, latitude - 0.001],
     ];
 
-    // Yeni parsel oluştur ve kaydet
-    const newParcel = new Parcel({
-      userId: req.user?._id,
+    // Yeni parsel oluştur
+    const parcel = new Parcel({
       il,
       ilce,
       mahalle,
       ada,
-      parsel,
-      geometry: {
+      coordinates: {
         type: 'Polygon',
-        coordinates: parcelBoundaries,
+        coordinates: [boundaries],
       },
-      notes: [],
+      center: {
+        type: 'Point',
+        coordinates: [longitude, latitude],
+      },
     });
 
-    await newParcel.save();
+    // Parseli kaydet
+    await parcel.save();
 
-    res.status(200).json({
-      success: true,
-      data: {
-        ...newParcel.toObject(),
-        center: coordinates,
-      },
+    res.status(201).json({
+      message: 'Parsel başarıyla oluşturuldu',
+      parcel,
     });
   } catch (error) {
     console.error('Parsel arama hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Parsel arama sırasında bir hata oluştu',
-    });
+    res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
@@ -120,28 +114,20 @@ export const searchParcel = async (req: Request, res: Response): Promise<void> =
  * @param req - Express Request nesnesi (params.id: parsel ID'si)
  * @param res - Express Response nesnesi
  */
-export const getParcelDetails = async (req: Request, res: Response): Promise<void> => {
+export const getParcelDetails = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const parcel = await Parcel.findById(req.params.id);
-    
+    const parcel = await Parcel.findById(req.params.id)
+      .populate('notes.user', 'name email');
+
     if (!parcel) {
-      res.status(404).json({
-        success: false,
-        message: 'Parsel bulunamadı',
-      });
+      res.status(404).json({ message: 'Parsel bulunamadı' });
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      data: parcel,
-    });
+    res.json(parcel);
   } catch (error) {
     console.error('Parsel detay hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Parsel detayları alınırken bir hata oluştu',
-    });
+    res.status(500).json({ message: 'Sunucu hatası' });
   }
 };
 
@@ -151,37 +137,38 @@ export const getParcelDetails = async (req: Request, res: Response): Promise<voi
  * @param req - Express Request nesnesi (params.id: parsel ID'si, body.note: eklenecek not)
  * @param res - Express Response nesnesi
  */
-export const addNote = async (req: Request, res: Response): Promise<void> => {
+export const addNote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { note } = req.body;
     const parcel = await Parcel.findById(req.params.id);
-    
+
     if (!parcel) {
-      res.status(404).json({
-        success: false,
-        message: 'Parsel bulunamadı',
-      });
+      res.status(404).json({ message: 'Parsel bulunamadı' });
       return;
     }
 
-    // Yeni notu ekle
+    if (!req.user) {
+      res.status(401).json({ message: 'Not authorized' });
+      return;
+    }
+
+    // Notu ekle
     parcel.notes.push({
       content: note,
+      user: req.user._id,
       createdAt: new Date(),
-      userId: req.user?._id,
     });
 
+    // Parseli kaydet
     await parcel.save();
 
-    res.status(200).json({
-      success: true,
-      data: parcel,
-    });
+    // Güncel parseli kullanıcı bilgileriyle birlikte getir
+    const updatedParcel = await Parcel.findById(req.params.id)
+      .populate('notes.user', 'name email');
+
+    res.json(updatedParcel);
   } catch (error) {
     console.error('Not ekleme hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Not eklenirken bir hata oluştu',
-    });
+    res.status(500).json({ message: 'Sunucu hatası' });
   }
 };

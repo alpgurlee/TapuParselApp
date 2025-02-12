@@ -1,140 +1,142 @@
-# Tapu Parsel Yönetim Sistemi
+# 🗺️ Tapu Parsel Uygulaması
 
-Bu proje, tapu ve parsel bilgilerini yönetmek için geliştirilmiş bir web uygulamasıdır. Kullanıcılar parsel bilgilerini arayabilir, harita üzerinde görüntüleyebilir ve notlar ekleyebilir.
+Modern web teknolojileri kullanılarak geliştirilmiş, tapu ve parsel bilgilerini harita üzerinde görüntüleme ve yönetme uygulaması.
 
-## Özellikler
+## 🌟 Özellikler
 
-- 🔐 Kullanıcı Kimlik Doğrulama
-  - JWT tabanlı kimlik doğrulama
-  - Güvenli parola yönetimi
-  - Oturum yönetimi
+### 1. Harita İşlemleri
+- **Çizim Araçları**
+  - 🖐️ Pan Tool: Haritada gezinme
+  - 📍 Marker Tool: Tek nokta işaretleme
+  - 🔷 Polygon Tool: Çokgen çizimi
+  - 🎯 Coordinate Tool: Koordinat alma
+  - [ ] Coordinate Input: JSON formatında koordinat girişi
 
-- 🗺️ Harita Entegrasyonu
-  - Google Maps entegrasyonu
-  - Parsel sınırlarını görüntüleme
-  - Dinamik harita kontrolü
+### 2. Not Sistemi
+- Her marker ve polygon için not ekleme
+- Notları düzenleme ve silme
+- Konum bilgisi (il, ilçe, mahalle, ada, parsel) ile notları ilişkilendirme
+- 🚩 Kırmızı bayrak ikonları ile notları haritada gösterme
+- Not seçildiğinde ilgili parselin sınırlarını gösterme
+- Polygon ve marker'lar için özelleştirilmiş görünüm
 
-- 📝 Parsel Yönetimi
-  - Parsel arama
-  - Parsel detaylarını görüntüleme
-  - Parsellere not ekleme
+### 3. Kullanıcı Yönetimi
+- Kullanıcı kaydı ve girişi
+- JWT tabanlı oturum yönetimi
+- Kullanıcıya özel not ve işaretlemeler
+- Güvenli parola şifreleme (bcrypt)
 
-## Teknoloji Yığını
-
-### Backend
-- Node.js + Express
-- TypeScript
-- MongoDB + Mongoose
-- JWT Authentication
-- Google Maps Geocoding API
+## 🛠️ Teknolojiler
 
 ### Frontend
-- React
-- TypeScript
-- Material-UI
-- @react-google-maps/api
-- Axios
+- React 18
+- TypeScript 5
+- Material-UI v5
+- Google Maps API
+- Vite
+- React Router v6
 
-## Proje Yapısı
+### Backend
+- Node.js
+- Express
+- MongoDB
+- JWT Authentication
+- Mongoose ODM
+- bcryptjs
 
-```
-TapuParsel/
-├── client/                 # Frontend uygulaması
-│   ├── src/
-│   │   ├── components/    # React bileşenleri
-│   │   ├── contexts/      # Context API tanımları
-│   │   ├── pages/         # Sayfa bileşenleri
-│   │   └── types/         # TypeScript tip tanımları
-│   └── package.json
-│
-└── server/                # Backend uygulaması
-    ├── src/
-    │   ├── controllers/   # API kontrolcüleri
-    │   ├── middleware/    # Express middleware'leri
-    │   ├── models/        # Mongoose modelleri
-    │   └── routes/        # API rotaları
-    └── package.json
+## 📦 Kurulum
+
+1. Repoyu klonlayın:
+```bash
+git clone https://github.com/yourusername/TapuParsel.git
 ```
 
-## Kurulum
+2. Frontend bağımlılıklarını yükleyin:
+```bash
+cd client
+npm install
+```
 
-1. Depoyu klonlayın:
-   ```bash
-   git clone [repo-url]
-   ```
+3. Backend bağımlılıklarını yükleyin:
+```bash
+cd server
+npm install
+```
 
-2. Backend bağımlılıklarını yükleyin:
-   ```bash
-   cd server
-   npm install
-   ```
+4. Gerekli çevre değişkenlerini ayarlayın:
+   - client/.env:
+     - VITE_GOOGLE_MAPS_API_KEY
+     - VITE_API_URL
+   - server/.env:
+     - MONGODB_URI
+     - JWT_SECRET
+     - PORT
 
-3. Frontend bağımlılıklarını yükleyin:
+5. Uygulamayı başlatın:
+   - Frontend:
    ```bash
    cd client
-   npm install
+   npm run dev
    ```
-
-4. Gerekli environment değişkenlerini ayarlayın:
-   - `server/.env`:
-     ```
-     PORT=5000
-     MONGODB_URI=mongodb://localhost:27017/tapu_parsel_db
-     JWT_SECRET=your-jwt-secret
-     GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-     ```
-   - `client/.env`:
-     ```
-     VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-     ```
-
-5. MongoDB'yi başlatın:
-   ```bash
-   mongod
-   ```
-
-6. Backend'i başlatın:
+   - Backend:
    ```bash
    cd server
    npm run dev
    ```
 
-7. Frontend'i başlatın:
-   ```bash
-   cd client
-   npm run dev
-   ```
+## 📝 Kullanım
 
-## API Endpoints
+1. **Harita İşlemleri**
+   - Sol araç çubuğundan istediğiniz aracı seçin
+   - Harita üzerinde tıklayarak işlem yapın
+   - Koordinatları kopyalamak için sol alttaki kopyala butonunu kullanın
 
-### Kimlik Doğrulama
-- `POST /api/auth/register` - Yeni kullanıcı kaydı
-- `POST /api/auth/login` - Kullanıcı girişi
+2. **Not İşlemleri**
+   - Marker veya polygon'a tıklayarak not ekleyin
+   - Notları düzenlemek veya silmek için not detaylarını açın
+   - Konum bilgilerini otomatik olarak not ile ilişkilendirin
 
-### Parsel İşlemleri
-- `POST /api/parcels/search` - Parsel arama
-- `GET /api/parcels/:id` - Parsel detayları
-- `POST /api/parcels/:id/notes` - Parsele not ekleme
+3. **Koordinat Girişi**
+   - Sol araç çubuğundan koordinat girişi aracını seçin
+   - JSON formatında koordinatları girin
+   - "Çiz" butonuna tıklayarak polygon oluşturun
 
-## Yapılacaklar
+## 🆕 Son Güncellemeler
 
-- [ ] Tapu ve Kadastro API entegrasyonu
-- [ ] Parsel sınırları için gerçek veri desteği
-- [ ] Gelişmiş parsel arama filtreleri
-- [ ] Parsel geçmişi takibi
-- [ ] Toplu parsel işlemleri
-- [ ] PDF rapor oluşturma
-- [ ] Kullanıcı rolleri ve yetkilendirme
-- [ ] E-posta bildirimleri
+### v0.2.0 (12 Şubat 2025)
+1. **Harita İyileştirmeleri**
+   - Not konumları için kırmızı bayrak ikonları eklendi
+   - Not seçildiğinde parsel sınırları otomatik gösteriliyor
+   - Harita performansı iyileştirildi (useMemo kullanımı)
 
-## Katkıda Bulunma
+2. **Kullanıcı Deneyimi**
+   - Not ekleme ve görüntüleme arayüzü geliştirildi
+   - Parsel sınırları görselleştirildi
+   - Harita kontrolleri iyileştirildi
 
-1. Bu depoyu fork edin
-2. Yeni bir branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some amazing feature'`)
+3. **Teknik İyileştirmeler**
+   - TypeScript tip tanımlamaları güncellendi
+   - Bellek kullanımı optimize edildi
+   - Sonsuz döngü hataları giderildi
+
+## 🔄 Güncelleme Geçmişi
+
+### v1.0.0 (11 Şubat 2024)
+- İlk sürüm yayınlandı
+- Temel harita işlevleri eklendi
+- Not sistemi entegre edildi
+- Kullanıcı yönetimi eklendi
+
+## 👥 Katkıda Bulunanlar
+- [Katkıda bulunanların isimleri]
+
+## 📄 Lisans
+Bu proje MIT lisansı altında lisanslanmıştır.
+
+## 🤝 Katkıda Bulunma
+
+1. Bu repoyu fork edin
+2. Feature branch'i oluşturun (`git checkout -b feature/amazing-feature`)
+3. Değişikliklerinizi commit edin (`git commit -m 'feat: Add amazing feature'`)
 4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Bir Pull Request oluşturun
-
-## Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+5. Pull Request oluşturun

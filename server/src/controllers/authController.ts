@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import { User } from '../models/User';
 
 // JWT secret key'i env'den al
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -35,7 +35,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     // JWT token oluştur
     const token = jwt.sign(
-      { userId: user._id },
+      { id: user._id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -53,7 +53,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Kayıt hatası:', error);
     res.status(500).json({
-      message: 'Kayıt işlemi sırasında bir hata oluştu',
+      message: 'Kayıt sırasında bir hata oluştu',
     });
   }
 };
@@ -63,33 +63,29 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    console.log('Login attempt:', { email }); // Debug log
+    // Email ile kullanıcıyı bul
+    const user = await User.findOne({ email });
 
-    // Kullanıcıyı bul
-    const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      console.log('User not found:', email); // Debug log
       res.status(401).json({
-        message: 'Email veya şifre hatalı',
+        message: 'Geçersiz email veya şifre',
       });
       return;
     }
 
     // Şifreyi kontrol et
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
+
     if (!isMatch) {
-      console.log('Password mismatch for user:', email); // Debug log
       res.status(401).json({
-        message: 'Email veya şifre hatalı',
+        message: 'Geçersiz email veya şifre',
       });
       return;
     }
 
-    console.log('Login successful:', email); // Debug log
-
     // JWT token oluştur
     const token = jwt.sign(
-      { userId: user._id },
+      { id: user._id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );

@@ -3,22 +3,29 @@ import mongoose, { Document, Schema } from 'mongoose';
 // Not için interface
 interface INote {
   content: string;
+  user: mongoose.Types.ObjectId;
   createdAt: Date;
-  userId: mongoose.Types.ObjectId;
+}
+
+// Koordinat interface'leri
+interface IPoint {
+  type: 'Point';
+  coordinates: [number, number];
+}
+
+interface IPolygon {
+  type: 'Polygon';
+  coordinates: number[][][];
 }
 
 // Parsel için interface
 export interface IParcel extends Document {
-  userId: mongoose.Types.ObjectId;
   il: string;
   ilce: string;
   mahalle: string;
   ada: string;
-  parsel: string;
-  geometry: {
-    type: 'Polygon';
-    coordinates: number[][][];
-  };
+  coordinates: IPolygon;
+  center: IPoint;
   notes: INote[];
   createdAt: Date;
   updatedAt: Date;
@@ -30,25 +37,20 @@ const noteSchema = new Schema({
     type: String,
     required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  userId: {
+  user: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
 // Parsel şeması
 const parcelSchema = new Schema(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
     il: {
       type: String,
       required: true,
@@ -65,11 +67,7 @@ const parcelSchema = new Schema(
       type: String,
       required: true,
     },
-    parsel: {
-      type: String,
-      required: true,
-    },
-    geometry: {
+    coordinates: {
       type: {
         type: String,
         enum: ['Polygon'],
@@ -80,6 +78,17 @@ const parcelSchema = new Schema(
         required: true,
       },
     },
+    center: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
     notes: [noteSchema],
   },
   {
@@ -87,8 +96,10 @@ const parcelSchema = new Schema(
   }
 );
 
-// Geometri için spatial index oluştur
-parcelSchema.index({ geometry: '2dsphere' });
+// Geospatial indexler
+parcelSchema.index({ coordinates: '2dsphere' });
+parcelSchema.index({ center: '2dsphere' });
 
-// Parsel modelini oluştur ve export et
-export default mongoose.model<IParcel>('Parcel', parcelSchema);
+const Parcel = mongoose.model<IParcel>('Parcel', parcelSchema);
+
+export default Parcel;
