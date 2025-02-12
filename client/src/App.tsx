@@ -1,26 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import Header from './components/Header';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-
-// Özel tema oluştur
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-});
+import Profile from './pages/Profile';
 
 // Özel route bileşeni - kimlik doğrulama kontrolü
 const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
@@ -28,30 +16,55 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) =>
   return user ? element : <Navigate to="/login" />;
 };
 
-const App: React.FC = () => {
+// Header'ı koşullu olarak gösteren bileşen
+const ConditionalHeader: React.FC = () => {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  
+  if (isAuthPage) {
+    return null;
+  }
+  
+  return <Header />;
+};
+
+// Ana uygulama içeriği
+const AppContent: React.FC = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Header />
-            <main style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/"
-                  element={<PrivateRoute element={<Dashboard />} />}
-                />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </main>
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <ConditionalHeader />
+      <main style={{ flex: 1 }}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={<PrivateRoute element={<Dashboard />} />}
+          />
+          <Route
+            path="/profile"
+            element={<PrivateRoute element={<Profile />} />}
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </main>
+    </div>
   );
 };
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <ThemeProvider>
+        <CssBaseline />
+        <AuthProvider>
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
+  );
+}
 
 export default App;

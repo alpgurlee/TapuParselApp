@@ -1,10 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
+  Badge,
   Box,
   Avatar,
   Menu,
@@ -12,17 +13,18 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
-  AccountCircle,
-  ExitToApp as LogoutIcon,
+  Notifications as NotificationsIcon,
+  AccountCircle as AccountCircleIcon,
+  Logout as LogoutIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -33,86 +35,73 @@ const Header: React.FC = () => {
     setAnchorEl(null);
   };
 
+  const handleProfile = () => {
+    handleClose();
+    navigate('/profile');
+  };
+
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Çıkış yapılırken hata oluştu:', error);
-    }
+    handleClose();
+    await logout();
+    navigate('/login');
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" color="primary">
       <Toolbar>
-        <IconButton
-          size="large"
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Tapu Parsel Yönetim Sistemi
         </Typography>
 
-        {user ? (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body1" sx={{ mr: 2 }}>
-              {user.username}
-            </Typography>
-            
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <Avatar sx={{ width: 32, height: 32 }}>
-                {user.username.charAt(0).toUpperCase()}
-              </Avatar>
-            </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            size="large"
+            color="inherit"
+            onClick={() => navigate('/notifications')}
+          >
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
 
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={handleClose}>
-                <AccountCircle sx={{ mr: 1 }} />
-                Profil
-              </MenuItem>
-              <MenuItem onClick={handleClose}>
-                <SettingsIcon sx={{ mr: 1 }} />
-                Ayarlar
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <LogoutIcon sx={{ mr: 1 }} />
-                Çıkış Yap
-              </MenuItem>
-            </Menu>
-          </Box>
-        ) : (
-          <Button color="inherit" onClick={() => navigate('/login')}>
-            Giriş Yap
-          </Button>
-        )}
+          <IconButton
+            size="large"
+            onClick={handleMenu}
+            color="inherit"
+          >
+            {user?.photoURL ? (
+              <Avatar
+                src={user.photoURL}
+                sx={{ width: 32, height: 32 }}
+              />
+            ) : (
+              <AccountCircleIcon />
+            )}
+          </IconButton>
+        </Box>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+          onClick={handleClose}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <MenuItem onClick={handleProfile}>
+            <AccountCircleIcon sx={{ mr: 1 }} />
+            Profil
+          </MenuItem>
+          <MenuItem onClick={handleProfile}>
+            <SettingsIcon sx={{ mr: 1 }} />
+            Ayarlar
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleLogout}>
+            <LogoutIcon sx={{ mr: 1 }} />
+            Çıkış Yap
+          </MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );
